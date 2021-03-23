@@ -47,32 +47,32 @@ type CommonStruct struct {
 		AuthVerify func(ctx context.Context, token string) ([]auth.Permission, error) `perm:"read"`
 		AuthNew    func(ctx context.Context, perms []auth.Permission) ([]byte, error) `perm:"admin"`
 
-		NetConnectedness            func(context.Context, peer.ID) (network.Connectedness, error)    `perm:"read"`
-		NetPeers                    func(context.Context) ([]peer.AddrInfo, error)                   `perm:"read"`
+		NetConnectedness            func(context.Context, peer.ID) (network.Connectedness, error)    `perm:"admin"`
+		NetPeers                    func(context.Context) ([]peer.AddrInfo, error)                   `perm:"admin"`
 		NetConnect                  func(context.Context, peer.AddrInfo) error                       `perm:"write"`
-		NetAddrsListen              func(context.Context) (peer.AddrInfo, error)                     `perm:"read"`
+		NetAddrsListen              func(context.Context) (peer.AddrInfo, error)                     `perm:"admin"`
 		NetDisconnect               func(context.Context, peer.ID) error                             `perm:"write"`
-		NetFindPeer                 func(context.Context, peer.ID) (peer.AddrInfo, error)            `perm:"read"`
-		NetPubsubScores             func(context.Context) ([]api.PubsubScore, error)                 `perm:"read"`
-		NetAutoNatStatus            func(context.Context) (api.NatInfo, error)                       `perm:"read"`
-		NetBandwidthStats           func(ctx context.Context) (metrics.Stats, error)                 `perm:"read"`
-		NetBandwidthStatsByPeer     func(ctx context.Context) (map[string]metrics.Stats, error)      `perm:"read"`
-		NetBandwidthStatsByProtocol func(ctx context.Context) (map[protocol.ID]metrics.Stats, error) `perm:"read"`
-		NetAgentVersion             func(ctx context.Context, p peer.ID) (string, error)             `perm:"read"`
-		NetPeerInfo                 func(context.Context, peer.ID) (*api.ExtendedPeerInfo, error)    `perm:"read"`
+		NetFindPeer                 func(context.Context, peer.ID) (peer.AddrInfo, error)            `perm:"write"`
+		NetPubsubScores             func(context.Context) ([]api.PubsubScore, error)                 `perm:"admin"`
+		NetAutoNatStatus            func(context.Context) (api.NatInfo, error)                       `perm:"write"`
+		NetBandwidthStats           func(ctx context.Context) (metrics.Stats, error)                 `perm:"write"`
+		NetBandwidthStatsByPeer     func(ctx context.Context) (map[string]metrics.Stats, error)      `perm:"write"`
+		NetBandwidthStatsByProtocol func(ctx context.Context) (map[protocol.ID]metrics.Stats, error) `perm:"write"`
+		NetAgentVersion             func(ctx context.Context, p peer.ID) (string, error)             `perm:"admin"`
+		NetPeerInfo                 func(context.Context, peer.ID) (*api.ExtendedPeerInfo, error)    `perm:"admin"`
 		NetBlockAdd                 func(ctx context.Context, acl api.NetBlockList) error            `perm:"admin"`
 		NetBlockRemove              func(ctx context.Context, acl api.NetBlockList) error            `perm:"admin"`
-		NetBlockList                func(ctx context.Context) (api.NetBlockList, error)              `perm:"read"`
+		NetBlockList                func(ctx context.Context) (api.NetBlockList, error)              `perm:"admin"`
 
-		ID      func(context.Context) (peer.ID, error)        `perm:"read"`
+		ID      func(context.Context) (peer.ID, error)        `perm:"admin"`
 		Version func(context.Context) (api.APIVersion, error) `perm:"read"`
 
-		LogList     func(context.Context) ([]string, error)     `perm:"write"`
-		LogSetLevel func(context.Context, string, string) error `perm:"write"`
+		LogList     func(context.Context) ([]string, error)     `perm:"admin"`
+		LogSetLevel func(context.Context, string, string) error `perm:"admin"`
 
 		Shutdown func(context.Context) error                    `perm:"admin"`
-		Session  func(context.Context) (uuid.UUID, error)       `perm:"read"`
-		Closing  func(context.Context) (<-chan struct{}, error) `perm:"read"`
+		Session  func(context.Context) (uuid.UUID, error)       `perm:"admin"`
+		Closing  func(context.Context) (<-chan struct{}, error) `perm:"admin"`
 	}
 }
 
@@ -81,7 +81,7 @@ type FullNodeStruct struct {
 	CommonStruct
 
 	Internal struct {
-		ChainNotify                   func(context.Context) (<-chan []*api.HeadChange, error)                                                            `perm:"read"`
+		ChainNotify                   func(context.Context) (<-chan []*api.HeadChange, error)                                                            `perm:"write"`
 		ChainHead                     func(context.Context) (*types.TipSet, error)                                                                       `perm:"read"`
 		ChainGetRandomnessFromTickets func(context.Context, types.TipSetKey, crypto.DomainSeparationTag, abi.ChainEpoch, []byte) (abi.Randomness, error) `perm:"read"`
 		ChainGetRandomnessFromBeacon  func(context.Context, types.TipSetKey, crypto.DomainSeparationTag, abi.ChainEpoch, []byte) (abi.Randomness, error) `perm:"read"`
@@ -97,11 +97,11 @@ type FullNodeStruct struct {
 		ChainStatObj                  func(context.Context, cid.Cid, cid.Cid) (api.ObjStat, error)                                                       `perm:"read"`
 		ChainSetHead                  func(context.Context, types.TipSetKey) error                                                                       `perm:"admin"`
 		ChainGetGenesis               func(context.Context) (*types.TipSet, error)                                                                       `perm:"read"`
-		ChainTipSetWeight             func(context.Context, types.TipSetKey) (types.BigInt, error)                                                       `perm:"read"`
-		ChainGetNode                  func(ctx context.Context, p string) (*api.IpldObject, error)                                                       `perm:"read"`
+		ChainTipSetWeight             func(context.Context, types.TipSetKey) (types.BigInt, error)                                                       `perm:"write"`
+		ChainGetNode                  func(ctx context.Context, p string) (*api.IpldObject, error)                                                       `perm:"write"`
 		ChainGetMessage               func(context.Context, cid.Cid) (*types.Message, error)                                                             `perm:"read"`
-		ChainGetPath                  func(context.Context, types.TipSetKey, types.TipSetKey) ([]*api.HeadChange, error)                                 `perm:"read"`
-		ChainExport                   func(context.Context, abi.ChainEpoch, bool, types.TipSetKey) (<-chan []byte, error)                                `perm:"read"`
+		ChainGetPath                  func(context.Context, types.TipSetKey, types.TipSetKey) ([]*api.HeadChange, error)                                 `perm:"write"`
+		ChainExport                   func(context.Context, abi.ChainEpoch, bool, types.TipSetKey) (<-chan []byte, error)                                `perm:"write"`
 
 		BeaconGetEntry func(ctx context.Context, epoch abi.ChainEpoch) (*types.BeaconEntry, error) `perm:"read"`
 
@@ -110,30 +110,30 @@ type FullNodeStruct struct {
 		GasEstimateFeeCap     func(context.Context, *types.Message, int64, types.TipSetKey) (types.BigInt, error)                  `perm:"read"`
 		GasEstimateMessageGas func(context.Context, *types.Message, *api.MessageSendSpec, types.TipSetKey) (*types.Message, error) `perm:"read"`
 
-		SyncState          func(context.Context) (*api.SyncState, error)                `perm:"read"`
+		SyncState          func(context.Context) (*api.SyncState, error)                `perm:"write"`
 		SyncSubmitBlock    func(ctx context.Context, blk *types.BlockMsg) error         `perm:"write"`
-		SyncIncomingBlocks func(ctx context.Context) (<-chan *types.BlockHeader, error) `perm:"read"`
+		SyncIncomingBlocks func(ctx context.Context) (<-chan *types.BlockHeader, error) `perm:"write"`
 		SyncCheckpoint     func(ctx context.Context, key types.TipSetKey) error         `perm:"admin"`
 		SyncMarkBad        func(ctx context.Context, bcid cid.Cid) error                `perm:"admin"`
 		SyncUnmarkBad      func(ctx context.Context, bcid cid.Cid) error                `perm:"admin"`
 		SyncUnmarkAllBad   func(ctx context.Context) error                              `perm:"admin"`
-		SyncCheckBad       func(ctx context.Context, bcid cid.Cid) (string, error)      `perm:"read"`
-		SyncValidateTipset func(ctx context.Context, tsk types.TipSetKey) (bool, error) `perm:"read"`
+		SyncCheckBad       func(ctx context.Context, bcid cid.Cid) (string, error)      `perm:"write"`
+		SyncValidateTipset func(ctx context.Context, tsk types.TipSetKey) (bool, error) `perm:"write"`
 
-		MpoolGetConfig func(context.Context) (*types.MpoolConfig, error) `perm:"read"`
+		MpoolGetConfig func(context.Context) (*types.MpoolConfig, error) `perm:"write"`
 		MpoolSetConfig func(context.Context, *types.MpoolConfig) error   `perm:"write"`
 
-		MpoolSelect func(context.Context, types.TipSetKey, float64) ([]*types.SignedMessage, error) `perm:"read"`
+		MpoolSelect func(context.Context, types.TipSetKey, float64) ([]*types.SignedMessage, error) `perm:"write"`
 
-		MpoolPending func(context.Context, types.TipSetKey) ([]*types.SignedMessage, error) `perm:"read"`
+		MpoolPending func(context.Context, types.TipSetKey) ([]*types.SignedMessage, error) `perm:"write"`
 		MpoolClear   func(context.Context, bool) error                                      `perm:"write"`
 
-		MpoolPush          func(context.Context, *types.SignedMessage) (cid.Cid, error) `perm:"write"`
+		MpoolPush          func(context.Context, *types.SignedMessage) (cid.Cid, error) `perm:"read"`
 		MpoolPushUntrusted func(context.Context, *types.SignedMessage) (cid.Cid, error) `perm:"write"`
 
 		MpoolPushMessage func(context.Context, *types.Message, *api.MessageSendSpec) (*types.SignedMessage, error) `perm:"sign"`
 		MpoolGetNonce    func(context.Context, address.Address) (uint64, error)                                    `perm:"read"`
-		MpoolSub         func(context.Context) (<-chan api.MpoolUpdate, error)                                     `perm:"read"`
+		MpoolSub         func(context.Context) (<-chan api.MpoolUpdate, error)                                     `perm:"write"`
 
 		MpoolBatchPush          func(ctx context.Context, smsgs []*types.SignedMessage) ([]cid.Cid, error)                                  `perm:"write"`
 		MpoolBatchPushUntrusted func(ctx context.Context, smsgs []*types.SignedMessage) ([]cid.Cid, error)                                  `perm:"write"`
@@ -160,20 +160,20 @@ type FullNodeStruct struct {
 		ClientListImports                         func(ctx context.Context) ([]api.Import, error)                                                                   `perm:"write"`
 		ClientRemoveImport                        func(ctx context.Context, importID multistore.StoreID) error                                                      `perm:"admin"`
 		ClientHasLocal                            func(ctx context.Context, root cid.Cid) (bool, error)                                                             `perm:"write"`
-		ClientFindData                            func(ctx context.Context, root cid.Cid, piece *cid.Cid) ([]api.QueryOffer, error)                                 `perm:"read"`
-		ClientMinerQueryOffer                     func(ctx context.Context, miner address.Address, root cid.Cid, piece *cid.Cid) (api.QueryOffer, error)            `perm:"read"`
+		ClientFindData                            func(ctx context.Context, root cid.Cid, piece *cid.Cid) ([]api.QueryOffer, error)                                 `perm:"write"`
+		ClientMinerQueryOffer                     func(ctx context.Context, miner address.Address, root cid.Cid, piece *cid.Cid) (api.QueryOffer, error)            `perm:"write"`
 		ClientStartDeal                           func(ctx context.Context, params *api.StartDealParams) (*cid.Cid, error)                                          `perm:"admin"`
-		ClientGetDealInfo                         func(context.Context, cid.Cid) (*api.DealInfo, error)                                                             `perm:"read"`
-		ClientGetDealStatus                       func(context.Context, uint64) (string, error)                                                                     `perm:"read"`
+		ClientGetDealInfo                         func(context.Context, cid.Cid) (*api.DealInfo, error)                                                             `perm:"write"`
+		ClientGetDealStatus                       func(context.Context, uint64) (string, error)                                                                     `perm:"write"`
 		ClientListDeals                           func(ctx context.Context) ([]api.DealInfo, error)                                                                 `perm:"write"`
-		ClientGetDealUpdates                      func(ctx context.Context) (<-chan api.DealInfo, error)                                                            `perm:"read"`
+		ClientGetDealUpdates                      func(ctx context.Context) (<-chan api.DealInfo, error)                                                            `perm:"write"`
 		ClientRetrieve                            func(ctx context.Context, order api.RetrievalOrder, ref *api.FileRef) error                                       `perm:"admin"`
 		ClientRetrieveWithEvents                  func(ctx context.Context, order api.RetrievalOrder, ref *api.FileRef) (<-chan marketevents.RetrievalEvent, error) `perm:"admin"`
 		ClientQueryAsk                            func(ctx context.Context, p peer.ID, miner address.Address) (*storagemarket.StorageAsk, error)                    `perm:"read"`
-		ClientDealPieceCID                        func(ctx context.Context, root cid.Cid) (api.DataCIDSize, error)                                                  `perm:"read"`
-		ClientCalcCommP                           func(ctx context.Context, inpath string) (*api.CommPRet, error)                                                   `perm:"read"`
+		ClientDealPieceCID                        func(ctx context.Context, root cid.Cid) (api.DataCIDSize, error)                                                  `perm:"write"`
+		ClientCalcCommP                           func(ctx context.Context, inpath string) (*api.CommPRet, error)                                                   `perm:"write"`
 		ClientGenCar                              func(ctx context.Context, ref api.FileRef, outpath string) error                                                  `perm:"write"`
-		ClientDealSize                            func(ctx context.Context, root cid.Cid) (api.DataSize, error)                                                     `perm:"read"`
+		ClientDealSize                            func(ctx context.Context, root cid.Cid) (api.DataSize, error)                                                     `perm:"write"`
 		ClientListDataTransfers                   func(ctx context.Context) ([]api.DataTransferChannel, error)                                                      `perm:"write"`
 		ClientDataTransferUpdates                 func(ctx context.Context) (<-chan api.DataTransferChannel, error)                                                 `perm:"write"`
 		ClientRestartDataTransfer                 func(ctx context.Context, transferID datatransfer.TransferID, otherPeer peer.ID, isInitiator bool) error          `perm:"write"`
@@ -256,15 +256,15 @@ type FullNodeStruct struct {
 		PaychGetWaitReady           func(context.Context, cid.Cid) (address.Address, error)                                                   `perm:"sign"`
 		PaychAvailableFunds         func(context.Context, address.Address) (*api.ChannelAvailableFunds, error)                                `perm:"sign"`
 		PaychAvailableFundsByFromTo func(context.Context, address.Address, address.Address) (*api.ChannelAvailableFunds, error)               `perm:"sign"`
-		PaychList                   func(context.Context) ([]address.Address, error)                                                          `perm:"read"`
-		PaychStatus                 func(context.Context, address.Address) (*api.PaychStatus, error)                                          `perm:"read"`
+		PaychList                   func(context.Context) ([]address.Address, error)                                                          `perm:"write"`
+		PaychStatus                 func(context.Context, address.Address) (*api.PaychStatus, error)                                          `perm:"write"`
 		PaychSettle                 func(context.Context, address.Address) (cid.Cid, error)                                                   `perm:"sign"`
 		PaychCollect                func(context.Context, address.Address) (cid.Cid, error)                                                   `perm:"sign"`
 		PaychAllocateLane           func(context.Context, address.Address) (uint64, error)                                                    `perm:"sign"`
 		PaychNewPayment             func(ctx context.Context, from, to address.Address, vouchers []api.VoucherSpec) (*api.PaymentInfo, error) `perm:"sign"`
-		PaychVoucherCheck           func(context.Context, *paych.SignedVoucher) error                                                         `perm:"read"`
-		PaychVoucherCheckValid      func(context.Context, address.Address, *paych.SignedVoucher) error                                        `perm:"read"`
-		PaychVoucherCheckSpendable  func(context.Context, address.Address, *paych.SignedVoucher, []byte, []byte) (bool, error)                `perm:"read"`
+		PaychVoucherCheck           func(context.Context, *paych.SignedVoucher) error                                                         `perm:"write"`
+		PaychVoucherCheckValid      func(context.Context, address.Address, *paych.SignedVoucher) error                                        `perm:"write"`
+		PaychVoucherCheckSpendable  func(context.Context, address.Address, *paych.SignedVoucher, []byte, []byte) (bool, error)                `perm:"write"`
 		PaychVoucherAdd             func(context.Context, address.Address, *paych.SignedVoucher, []byte, types.BigInt) (types.BigInt, error)  `perm:"write"`
 		PaychVoucherCreate          func(context.Context, address.Address, big.Int, uint64) (*api.VoucherCreateResult, error)                 `perm:"sign"`
 		PaychVoucherList            func(context.Context, address.Address) ([]*paych.SignedVoucher, error)                                    `perm:"write"`
