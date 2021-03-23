@@ -205,7 +205,9 @@ func defCommon() Common {
 
 }
 
-var DefaultDefaultMaxFee = types.MustParseFIL("0.007")
+// 默认最大支付手续费0.007，增加到 0.008
+//var DefaultDefaultMaxFee = types.MustParseFIL("0.007")
+var DefaultDefaultMaxFee = types.MustParseFIL("0.008")
 var DefaultSimultaneousTransfers = uint64(20)
 
 // DefaultFullNode returns the default config
