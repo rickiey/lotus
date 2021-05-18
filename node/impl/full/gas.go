@@ -18,6 +18,8 @@ import (
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/exitcode"
 
+	builtin4 "github.com/filecoin-project/specs-actors/v4/actors/builtin"
+
 	"github.com/filecoin-project/lotus/api"
 	"github.com/filecoin-project/lotus/build"
 	"github.com/filecoin-project/lotus/chain/messagepool"
@@ -323,12 +325,29 @@ func gasEstimateGasLimit(
 }
 
 func (m *GasModule) GasEstimateMessageGas(ctx context.Context, msg *types.Message, spec *api.MessageSendSpec, _ types.TipSetKey) (*types.Message, error) {
+
+	// 默认 1.25， 如果是 WindowPoSt 改为 1.0999
+	gasLimitOverestimation := m.Mpool.GetConfig().GasLimitOverestimation
+
+	// 默认 20， 增加到 22， WindowPoSt 增加到 24
+	// maxqueueblks := 20
+	maxqueueblks := int64(22)
+
+	// 3000 nanoFIL
+	maxMinerTip := types.NewInt(3000_000_000_000)
+
+	// 简单判断下是不是 WindowPoSt 消息
+	if msg.To.Protocol() == address.ID && msg.Method == builtin4.MethodsMiner.SubmitWindowedPoSt {
+		gasLimitOverestimation = 1.0999
+		maxqueueblks = 24
+	}
+
 	if msg.GasLimit == 0 {
 		gasLimit, err := m.GasEstimateGasLimit(ctx, msg, types.TipSetKey{})
 		if err != nil {
 			return nil, xerrors.Errorf("estimating gas used: %w", err)
 		}
-		msg.GasLimit = int64(float64(gasLimit) * m.Mpool.GetConfig().GasLimitOverestimation)
+		msg.GasLimit = int64(float64(gasLimit) * gasLimitOverestimation)
 	}
 
 	if msg.GasPremium == types.EmptyInt || types.BigCmp(msg.GasPremium, types.NewInt(0)) == 0 {
@@ -336,11 +355,18 @@ func (m *GasModule) GasEstimateMessageGas(ctx context.Context, msg *types.Messag
 		if err != nil {
 			return nil, xerrors.Errorf("estimating gas price: %w", err)
 		}
-		msg.GasPremium = gasPremium
+
+		// gas Premium 增加 25%
+		msg.GasPremium = types.BigAdd(gasPremium, types.BigDiv(gasPremium, types.NewInt(4)))
+
+		// 设置最大 MinerTip, 防止天价矿工费
+		if types.BigCmp(msg.GasPremium, types.BigDiv(maxMinerTip, types.NewInt(uint64(msg.GasLimit)))) >= 0 {
+			msg.GasPremium = types.BigDiv(maxMinerTip, types.NewInt(uint64(msg.GasLimit)))
+		}
 	}
 
 	if msg.GasFeeCap == types.EmptyInt || types.BigCmp(msg.GasFeeCap, types.NewInt(0)) == 0 {
-		feeCap, err := m.GasEstimateFeeCap(ctx, msg, 20, types.EmptyTSK)
+		feeCap, err := m.GasEstimateFeeCap(ctx, msg, maxqueueblks, types.EmptyTSK)
 		if err != nil {
 			return nil, xerrors.Errorf("estimating fee cap: %w", err)
 		}

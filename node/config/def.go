@@ -266,13 +266,21 @@ func DefaultStorageMiner() *StorageMiner {
 			MaxProviderCollateralMultiplier: 2,
 		},
 
+		//Fees: MinerFeeConfig{
+		//	MaxPreCommitGasFee:     types.MustParseFIL("0.025"),
+		//	MaxCommitGasFee:        types.MustParseFIL("0.05"),
+		//	MaxTerminateGasFee:     types.MustParseFIL("0.5"),
+		//	MaxWindowPoStGasFee:    types.MustParseFIL("5"),
+		//	MaxPublishDealsFee:     types.MustParseFIL("0.05"),
+		//	MaxMarketBalanceAddFee: types.MustParseFIL("0.007"),
+		//},
 		Fees: MinerFeeConfig{
-			MaxPreCommitGasFee:     types.MustParseFIL("0.025"),
-			MaxCommitGasFee:        types.MustParseFIL("0.05"),
-			MaxTerminateGasFee:     types.MustParseFIL("0.5"),
+			MaxPreCommitGasFee:     types.MustParseFIL("0.03"),
+			MaxCommitGasFee:        types.MustParseFIL("0.08"),
+			MaxTerminateGasFee:     types.MustParseFIL("0.6"),
 			MaxWindowPoStGasFee:    types.MustParseFIL("5"),
-			MaxPublishDealsFee:     types.MustParseFIL("0.05"),
-			MaxMarketBalanceAddFee: types.MustParseFIL("0.007"),
+			MaxPublishDealsFee:     types.MustParseFIL("0.08"),
+			MaxMarketBalanceAddFee: types.MustParseFIL("0.008"),
 		},
 
 		Addresses: MinerAddressConfig{
