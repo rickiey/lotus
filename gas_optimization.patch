@@ -1,0 +1,141 @@
+Index: chain/messagepool/config.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chain/messagepool/config.go b/chain/messagepool/config.go
+--- a/chain/messagepool/config.go	(revision 8f426b49ec7f33d8c321cdb5a623c7b9382cfc62)
++++ b/chain/messagepool/config.go	(revision 4fdd5a45dc2344c75895099c0c16f25fc5a1885e)
+@@ -15,7 +15,8 @@
+ 	MemPoolSizeLimitHiDefault = 30000
+ 	MemPoolSizeLimitLoDefault = 20000
+ 	PruneCooldownDefault      = time.Minute
+-	GasLimitOverestimation    = 1.25
++	//GasLimitOverestimation    = 1.25
++	GasLimitOverestimation = 1.27
+ 
+ 	ConfigKey = datastore.NewKey("/mpool/config")
+ )
+Index: node/config/def.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node/config/def.go b/node/config/def.go
+--- a/node/config/def.go	(revision 8f426b49ec7f33d8c321cdb5a623c7b9382cfc62)
++++ b/node/config/def.go	(revision 4fdd5a45dc2344c75895099c0c16f25fc5a1885e)
+@@ -247,7 +247,9 @@
+ 
+ }
+ 
+-var DefaultDefaultMaxFee = types.MustParseFIL("0.007")
++// 默认最大支付手续费0.007，增加到 0.008
++//var DefaultDefaultMaxFee = types.MustParseFIL("0.007")
++var DefaultDefaultMaxFee = types.MustParseFIL("0.008")
+ var DefaultSimultaneousTransfers = uint64(20)
+ 
+ // DefaultFullNode returns the default config
+@@ -324,10 +326,15 @@
+ 			MaxProviderCollateralMultiplier: 2,
+ 		},
+ 
++		//Fees: MinerFeeConfig{
++		//	MaxPreCommitGasFee:     types.MustParseFIL("0.025"),
++		//	MaxCommitGasFee:        types.MustParseFIL("0.05"),
++		//	MaxTerminateGasFee:     types.MustParseFIL("0.5"),
++		//	MaxWindowPoStGasFee:    types.MustParseFIL("5"),
++		//	MaxPublishDealsFee:     types.MustParseFIL("0.05"),
++		//	MaxMarketBalanceAddFee: types.MustParseFIL("0.007"),
++		//},
+ 		Fees: MinerFeeConfig{
+-			MaxPreCommitGasFee: types.MustParseFIL("0.025"),
+-			MaxCommitGasFee:    types.MustParseFIL("0.05"),
+-
+ 			MaxPreCommitBatchGasFee: BatchFeeConfig{
+ 				Base:      types.MustParseFIL("0.025"), // TODO: update before v1.10.0
+ 				PerSector: types.MustParseFIL("0.025"), // TODO: update before v1.10.0
+@@ -337,10 +344,12 @@
+ 				PerSector: types.MustParseFIL("0.05"), // TODO: update before v1.10.0
+ 			},
+ 
+-			MaxTerminateGasFee:     types.MustParseFIL("0.5"),
++			MaxPreCommitGasFee:     types.MustParseFIL("0.03"),
++			MaxCommitGasFee:        types.MustParseFIL("0.08"),
++			MaxTerminateGasFee:     types.MustParseFIL("0.6"),
+ 			MaxWindowPoStGasFee:    types.MustParseFIL("5"),
+-			MaxPublishDealsFee:     types.MustParseFIL("0.05"),
+-			MaxMarketBalanceAddFee: types.MustParseFIL("0.007"),
++			MaxPublishDealsFee:     types.MustParseFIL("0.08"),
++			MaxMarketBalanceAddFee: types.MustParseFIL("0.008"),
+ 		},
+ 
+ 		Addresses: MinerAddressConfig{
+Index: node/impl/full/gas.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node/impl/full/gas.go b/node/impl/full/gas.go
+--- a/node/impl/full/gas.go	(revision 8f426b49ec7f33d8c321cdb5a623c7b9382cfc62)
++++ b/node/impl/full/gas.go	(revision 4fdd5a45dc2344c75895099c0c16f25fc5a1885e)
+@@ -18,6 +18,8 @@
+ 	"github.com/filecoin-project/go-state-types/big"
+ 	"github.com/filecoin-project/go-state-types/exitcode"
+ 
++	builtin4 "github.com/filecoin-project/specs-actors/v4/actors/builtin"
++
+ 	"github.com/filecoin-project/lotus/api"
+ 	"github.com/filecoin-project/lotus/build"
+ 	"github.com/filecoin-project/lotus/chain/messagepool"
+@@ -321,12 +323,29 @@
+ }
+ 
+ func (m *GasModule) GasEstimateMessageGas(ctx context.Context, msg *types.Message, spec *api.MessageSendSpec, _ types.TipSetKey) (*types.Message, error) {
++
++	// 默认 1.25， 如果是 WindowPoSt 改为 1.0999
++	gasLimitOverestimation := m.Mpool.GetConfig().GasLimitOverestimation
++
++	// 默认 20， 增加到 22， WindowPoSt 增加到 24
++	// maxqueueblks := 20
++	maxqueueblks := int64(22)
++
++	// 3000 nanoFIL
++	maxMinerTip := types.NewInt(3000_000_000_000)
++
++	// 简单判断下是不是 WindowPoSt 消息
++	if msg.To.Protocol() == address.ID && msg.Method == builtin4.MethodsMiner.SubmitWindowedPoSt {
++		gasLimitOverestimation = 1.0999
++		maxqueueblks = 24
++	}
++
+ 	if msg.GasLimit == 0 {
+ 		gasLimit, err := m.GasEstimateGasLimit(ctx, msg, types.TipSetKey{})
+ 		if err != nil {
+ 			return nil, xerrors.Errorf("estimating gas used: %w", err)
+ 		}
+-		msg.GasLimit = int64(float64(gasLimit) * m.Mpool.GetConfig().GasLimitOverestimation)
++		msg.GasLimit = int64(float64(gasLimit) * gasLimitOverestimation)
+ 	}
+ 
+ 	if msg.GasPremium == types.EmptyInt || types.BigCmp(msg.GasPremium, types.NewInt(0)) == 0 {
+@@ -334,11 +353,18 @@
+ 		if err != nil {
+ 			return nil, xerrors.Errorf("estimating gas price: %w", err)
+ 		}
+-		msg.GasPremium = gasPremium
++
++		// gas Premium 增加 25%
++		msg.GasPremium = types.BigAdd(gasPremium, types.BigDiv(gasPremium, types.NewInt(4)))
++
++		// 设置最大 MinerTip, 防止天价矿工费
++		if types.BigCmp(msg.GasPremium, types.BigDiv(maxMinerTip, types.NewInt(uint64(msg.GasLimit)))) >= 0 {
++			msg.GasPremium = types.BigDiv(maxMinerTip, types.NewInt(uint64(msg.GasLimit)))
++		}
+ 	}
+ 
+ 	if msg.GasFeeCap == types.EmptyInt || types.BigCmp(msg.GasFeeCap, types.NewInt(0)) == 0 {
+-		feeCap, err := m.GasEstimateFeeCap(ctx, msg, 20, types.EmptyTSK)
++		feeCap, err := m.GasEstimateFeeCap(ctx, msg, maxqueueblks, types.EmptyTSK)
+ 		if err != nil {
+ 			return nil, xerrors.Errorf("estimating fee cap: %w", err)
+ 		}

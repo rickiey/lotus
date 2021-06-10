@@ -1,0 +1,25 @@
+Index: node/repo/fsrepo_ds.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/node/repo/fsrepo_ds.go b/node/repo/fsrepo_ds.go
+--- a/node/repo/fsrepo_ds.go	(revision 4fdd5a45dc2344c75895099c0c16f25fc5a1885e)
++++ b/node/repo/fsrepo_ds.go	(revision e9bf5c54fa4f154d5c7d38bcb56264c576a21db0)
+@@ -31,6 +31,7 @@
+ 	opts.ReadOnly = readonly
+ 
+ 	opts.Options = dgbadger.DefaultOptions("").WithTruncate(true).
++		WithSyncWrites(false).
+ 		WithValueThreshold(1 << 10)
+ 	return badger.NewDatastore(path, &opts)
+ }
+@@ -38,7 +39,7 @@
+ func levelDs(path string, readonly bool) (datastore.Batching, error) {
+ 	return levelds.NewDatastore(path, &levelds.Options{
+ 		Compression: ldbopts.NoCompression,
+-		NoSync:      false,
++		NoSync:      true,
+ 		Strict:      ldbopts.StrictAll,
+ 		ReadOnly:    readonly,
+ 	})
