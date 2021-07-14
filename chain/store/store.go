@@ -60,8 +60,11 @@ var log = logging.Logger("chainstore")
 var chainHeadKey = dstore.NewKey("head")
 var blockValidationCacheKeyPrefix = dstore.NewKey("blockValidation")
 
-var DefaultTipSetCacheSize = 8192
-var DefaultMsgMetaCacheSize = 2048
+//var DefaultTipSetCacheSize = 8192
+var DefaultTipSetCacheSize = 8192 * 4
+
+//var DefaultMsgMetaCacheSize = 2048
+var DefaultMsgMetaCacheSize = 2048 * 4
 
 var ErrNotifeeDone = errors.New("notifee is done and should be removed")
 
@@ -267,7 +270,9 @@ func (cs *ChainStore) SubHeadChanges(ctx context.Context) chan []*api.HeadChange
 	head := cs.GetHeaviestTipSet()
 	cs.pubLk.Unlock()
 
-	out := make(chan []*api.HeadChange, 16)
+	//out := make(chan []*api.HeadChange, 16)
+	// expand to 128
+	out := make(chan []*api.HeadChange, reorgChBuf/2)
 	out <- []*api.HeadChange{{
 		Type: HCCurrent,
 		Val:  head,
@@ -497,7 +502,8 @@ type reorg struct {
 	new *types.TipSet
 }
 
-const reorgChBuf = 32
+//const reorgChBuf = 32
+const reorgChBuf = 256
 
 func (cs *ChainStore) reorgWorker(ctx context.Context, initialNotifees []ReorgNotifee) chan<- reorg {
 	out := make(chan reorg, reorgChBuf)
