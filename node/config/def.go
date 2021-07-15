@@ -255,9 +255,9 @@ func defCommon() Common {
 
 }
 
-// 默认最大支付手续费0.007，增加到 0.008
+// 默认最大支付手续费0.007，增加到 0.08
 //var DefaultDefaultMaxFee = types.MustParseFIL("0.007")
-var DefaultDefaultMaxFee = types.MustParseFIL("0.008")
+var DefaultDefaultMaxFee = types.MustParseFIL("0.08")
 var DefaultSimultaneousTransfers = uint64(20)
 
 // DefaultFullNode returns the default config
@@ -337,29 +337,21 @@ func DefaultStorageMiner() *StorageMiner {
 			MaxProviderCollateralMultiplier: 2,
 		},
 
-		//Fees: MinerFeeConfig{
-		//	MaxPreCommitGasFee:     types.MustParseFIL("0.025"),
-		//	MaxCommitGasFee:        types.MustParseFIL("0.05"),
-		//	MaxTerminateGasFee:     types.MustParseFIL("0.5"),
-		//	MaxWindowPoStGasFee:    types.MustParseFIL("5"),
-		//	MaxPublishDealsFee:     types.MustParseFIL("0.05"),
-		//	MaxMarketBalanceAddFee: types.MustParseFIL("0.007"),
-		//},
 		Fees: MinerFeeConfig{
 			MaxPreCommitBatchGasFee: BatchFeeConfig{
 				Base:      types.MustParseFIL("0"),
-				PerSector: types.MustParseFIL("0.02"),
+				PerSector: types.MustParseFIL("0.0205"),
 			},
 			MaxCommitBatchGasFee: BatchFeeConfig{
 				Base:      types.MustParseFIL("0"),
-				PerSector: types.MustParseFIL("0.03"), // enough for 6 agg and 1nFIL base fee
+				PerSector: types.MustParseFIL("0.0305"), // enough for 6 agg and 1nFIL base fee
 			},
 
 			MaxPreCommitGasFee:     types.MustParseFIL("0.03"),
-			MaxCommitGasFee:        types.MustParseFIL("0.08"),
+			MaxCommitGasFee:        types.MustParseFIL("0.07"),
 			MaxTerminateGasFee:     types.MustParseFIL("0.6"),
 			MaxWindowPoStGasFee:    types.MustParseFIL("5"),
-			MaxPublishDealsFee:     types.MustParseFIL("0.08"),
+			MaxPublishDealsFee:     types.MustParseFIL("0.06"),
 			MaxMarketBalanceAddFee: types.MustParseFIL("0.008"),
 		},
 
